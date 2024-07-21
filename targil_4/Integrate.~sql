@@ -1,0 +1,129 @@
+-- Drop the Request table if it exists
+DROP TABLE Request;
+
+-- Drop constraints from the Booking and ROOM tables
+ALTER TABLE Booking DROP CONSTRAINT SYS_C008976;
+ALTER TABLE Booking DROP CONSTRAINT FK_BOOKING_ROOM_NUMBER;
+ALTER TABLE ROOM DROP CONSTRAINT SYS_C008970;
+
+-- Drop constraints from the Inform, ReservationAgent, and Receptionist tables
+ALTER TABLE Inform DROP CONSTRAINT SYS_C008995;
+ALTER TABLE Inform DROP CONSTRAINT FK_EM_ID_INFORM;
+ALTER TABLE ReservationAgent DROP CONSTRAINT FK_RESERVATIONAGENT_EM_ID;
+ALTER TABLE ReservationAgent DROP CONSTRAINT SYS_C008991;
+ALTER TABLE Receptionist DROP CONSTRAINT FK_RECEPTIONIST_EM_ID;
+ALTER TABLE Receptionist DROP CONSTRAINT SYS_C009001;
+
+-- Drop unnecessary tables
+DROP TABLE Employee2;
+
+-- Drop room_number columns from ROOM and Booking tables
+ALTER TABLE ROOM DROP COLUMN room_number;
+ALTER TABLE Booking DROP COLUMN room_number;
+
+-- Add a temporary column to ROOM, Booking, and Location_ tables to store row numbers
+ALTER TABLE ROOM ADD temp INT;
+ALTER TABLE Location_ ADD temp INT;
+ALTER TABLE Booking ADD temp INT;
+
+-- Update the temporary columns with row numbers
+UPDATE ROOM SET temp = rownum;
+UPDATE Location_ SET temp = rownum;
+UPDATE Booking SET temp = rownum;
+
+-- Add a LocationID column to the ROOM table and set up a foreign key constraint
+ALTER TABLE ROOM ADD LocationID INT;
+ALTER TABLE ROOM ADD CONSTRAINT FK_ROOM_LocationID FOREIGN KEY (LocationID) REFERENCES Location_(LocationID);
+
+-- Update the LocationID in ROOM table based on temp columns
+UPDATE ROOM room
+SET LocationID = (SELECT l.LocationID FROM Location_ l WHERE ROOM.temp = MOD(Location_.temp - 1, (SELECT COUNT(*) FROM ROOM)) + 1);
+
+-- Add primary key constraint to the ROOM table
+ALTER TABLE ROOM ADD CONSTRAINT PK_ROOM PRIMARY KEY (LocationID);
+
+-- Add a LocationID column to the Booking table and set up a foreign key constraint
+ALTER TABLE Booking ADD LocationID INT;
+ALTER TABLE Booking ADD CONSTRAINT FK_Booking_LocationID FOREIGN KEY (LocationID) REFERENCES Location_(LocationID);
+
+-- Update the LocationID in Booking table based on temp columns
+UPDATE Booking book
+SET LocationID = (SELECT l.LocationID FROM Location_ l WHERE Booking.temp = MOD(Location_.temp - 1, (SELECT COUNT(*) FROM Booking)) + 1);
+
+-- Add primary key constraint to the Booking table
+ALTER TABLE Booking ADD CONSTRAINT PK_Booking PRIMARY KEY (LocationID);
+
+-- Drop the em_id columns from ReservationAgent, Receptionist, Booking, and Inform tables
+ALTER TABLE ReservationAgent DROP COLUMN em_id;
+ALTER TABLE Receptionist DROP COLUMN em_id;
+ALTER TABLE Booking DROP COLUMN em_id;
+ALTER TABLE Inform DROP COLUMN em_id;
+
+-- Add a temporary column to EmployeeID, ReservationAgent, Receptionist, and Inform tables to store row numbers
+ALTER TABLE EmployeeID ADD temp INT;
+ALTER TABLE ReservationAgent ADD temp INT;
+ALTER TABLE Receptionist ADD temp INT;
+ALTER TABLE Inform ADD temp INT;
+
+-- Update the temporary columns with row numbers
+UPDATE EmployeeID SET temp = rownum;
+UPDATE ReservationAgent SET temp = rownum;
+UPDATE Receptionist SET temp = rownum;
+UPDATE Inform SET temp = rownum;
+
+-- Add an EmployeeID column to ReservationAgent table and set up a foreign key constraint
+ALTER TABLE ReservationAgent ADD EmployeeID INT;
+ALTER TABLE ReservationAgent ADD CONSTRAINT FK_ReservationAgent_EmployeeID FOREIGN KEY (EmployeeID) REFERENCES EMPLOYEE(EmployeeID);
+
+-- Update the EmployeeID in ReservationAgent table based on temp columns
+UPDATE ReservationAgent ra
+SET EmployeeID = (SELECT e.EmployeeID FROM Employee e WHERE ReservationAgent.temp = MOD(EmployeeID.temp - 1, (SELECT COUNT(*) FROM ReservationAgent)) + 1);
+
+-- Add primary key constraint to the ReservationAgent table
+ALTER TABLE ReservationAgent ADD CONSTRAINT PK_ReservationAgent PRIMARY KEY (EmployeeID);
+
+-- Add an EmployeeID column to Receptionist table and set up a foreign key constraint
+ALTER TABLE Receptionist ADD EmployeeID INT;
+ALTER TABLE Receptionist ADD CONSTRAINT Receptionist_EmployeeID FOREIGN KEY (EmployeeID) REFERENCES EMPLOYEE(EmployeeID);
+
+-- Update the EmployeeID in Receptionist table based on temp columns
+UPDATE Receptionist r
+SET EmployeeID = (SELECT e.EmployeeID FROM Employee e WHERE Receptionist.temp = MOD(EmployeeID.temp - 1, (SELECT COUNT(*) FROM Receptionist)) + 1);
+
+-- Add primary key constraint to the Receptionist table
+ALTER TABLE Receptionist ADD CONSTRAINT PK_Receptionist PRIMARY KEY (EmployeeID);
+
+-- Add an EmployeeID column to Booking table and set up a foreign key constraint
+ALTER TABLE Booking ADD EmployeeID INT;
+ALTER TABLE Booking ADD CONSTRAINT FK_Booking_EmployeeID FOREIGN KEY (EmployeeID) REFERENCES EMPLOYEE(EmployeeID);
+
+-- Update the EmployeeID in Booking table based on temp columns
+UPDATE Booking b
+SET EmployeeID = (SELECT e.EmployeeID FROM Employee e WHERE Booking.temp = MOD(EmployeeID.temp - 1, (SELECT COUNT(*) FROM Booking)) + 1);
+
+-- Add an EmployeeID column to Inform table and set up a foreign key constraint
+ALTER TABLE Inform ADD EmployeeID INT;
+ALTER TABLE Inform ADD CONSTRAINT FK_Inform_EmployeeID FOREIGN KEY (EmployeeID) REFERENCES EMPLOYEE(EmployeeID);
+
+-- Update the EmployeeID in Inform table based on temp columns
+UPDATE Inform i
+SET EmployeeID = (SELECT e.EmployeeID FROM Employee e WHERE Inform.temp = MOD(EmployeeID.temp - 1, (SELECT COUNT(*) FROM Inform)) + 1);
+
+-- Add primary key constraint to the Inform table
+ALTER TABLE Inform ADD CONSTRAINT PK_Inform PRIMARY KEY (EmployeeID);
+
+-- Add a temporary column to MaintenanceRequest_ and Guest tables to store row numbers
+ALTER TABLE MaintenanceRequest_ ADD temp INT;
+ALTER TABLE Guest ADD temp INT;
+
+-- Update the temporary columns with row numbers
+UPDATE MaintenanceRequest_ SET temp = rownum;
+UPDATE Guest SET temp = rownum;
+
+-- Add a guest_id column to MaintenanceRequest_ table and set up a foreign key constraint
+ALTER TABLE MaintenanceRequest_ ADD guest_id INT;
+ALTER TABLE MaintenanceRequest_ ADD CONSTRAINT FK_MaintenanceRequest_Guest FOREIGN KEY (guest_id) REFERENCES Guest(guest_id);
+
+-- Update the guest_id in MaintenanceRequest_ table based on temp columns
+UPDATE MaintenanceRequest_ mr
+SET guest_id = (SELECT g.guest_id FROM Guest g WHERE MaintenanceRequest_.temp = MOD(Guest.temp - 1, (SELECT COUNT(*) FROM MaintenanceRequest_)) + 1);

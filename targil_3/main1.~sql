@@ -1,0 +1,11 @@
+DECLARE
+    updatedBudget INT;
+BEGIN
+  
+    --UpdateAndAdjustDepartmentSizes;
+    
+    updatedBudget := UpdateBudgetForTopWorkingHoursDept();
+
+    DBMS_OUTPUT.PUT_LINE('Updated Budget: ' || updatedBudget);
+    
+END;
